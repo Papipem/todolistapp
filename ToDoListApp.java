@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
-public class ToDoListAppGUI extends JFrame {
+public class ToDoListApp extends JFrame {
     private TaskManager manager;
     private DefaultListModel<String> listModel;
     private JList<String> taskDisplay;
@@ -186,3 +186,4 @@ public class ToDoListAppGUI extends JFrame {
         });
     }
 }
+
