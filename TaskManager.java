@@ -1,42 +1,92 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.text.SimpleDateFormat;
 
 public class TaskManager {
-    private List<Task> taskList;
+    private Stack<Task> actionStack;       // for push, pop, peek
+    private Queue<Task> completedQueue;    // for enqueue, dequeue
+    private List<Task> tasks;              // main list of tasks
 
     public TaskManager() {
-        taskList = new ArrayList<>();
+        actionStack = new Stack<>();
+        completedQueue = new LinkedList<>();
+        tasks = new ArrayList<>();
     }
 
+    // ---- Add (push) ----
     public void addTask(Task task) {
-        taskList.add(task);
+        actionStack.push(task);
+        tasks.add(task);
     }
 
-    public void deleteTask(int index) {
-        if (index >= 0 && index < taskList.size()) {
-            taskList.remove(index);
+    // ---- Edit ----
+    public void editTask(Task oldTask, Task newTask) {
+        int index = tasks.indexOf(oldTask);
+        if (index != -1) {
+            tasks.set(index, newTask);
+            actionStack.push(newTask);
         }
     }
 
-    public void editTask(int index, String newName, String newDueDate, String newPriority) {
-        if (index >= 0 && index < taskList.size()) {
-            taskList.set(index, new Task(newName, newDueDate, newPriority));
+    // ---- Delete (pop) ----
+    public void deleteTask(Task task) {
+        tasks.remove(task);
+        actionStack.push(task);
+    }
+
+    // ---- Complete (enqueue) ----
+    public void completeTask(Task task) {
+        tasks.remove(task);
+        completedQueue.offer(task);
+    }
+
+    // ---- Undo last action (pop) ----
+    public void undoLastAction() {
+        if (!actionStack.isEmpty()) {
+            Task last = actionStack.pop();
+            if (!tasks.contains(last)) tasks.add(last);
         }
     }
 
-    public List<Task> getAllTasks() {
-        return taskList;
+    // ---- Peek ----
+    public Task peekLastAction() {
+        if (!actionStack.isEmpty()) {
+            return actionStack.peek();
+        }
+        return null;
     }
 
-    // 🔍 Search by name or due date
-    public List<Task> searchTasks(String keyword) {
-        List<Task> results = new ArrayList<>();
-        for (Task task : taskList) {
-            if (task.getName().toLowerCase().contains(keyword.toLowerCase()) ||
-                    task.getDueDate().toLowerCase().contains(keyword.toLowerCase())) {
-                results.add(task);
-            }
+    // ---- Dequeue ----
+    public Task dequeueCompleted() {
+        return completedQueue.poll();
+    }
+
+    // ---- Search by keyword ----
+    public Task searchTask(String keyword) {
+        for (Task t : tasks) {
+            if (t.getName().equalsIgnoreCase(keyword) ||
+                    t.getDueDate().equalsIgnoreCase(keyword))
+                return t;
         }
-        return results;
+        return null;
+    }
+
+    // ---- Get all tasks ----
+    public List<Task> getTasks() {
+        return tasks;
+    }
+
+    // ---- Get completed queue ----
+    public Queue<Task> getCompletedQueue() {
+        return completedQueue;
+    }
+
+    // ---- Date validation ----
+    public boolean isValidDate(String date) {
+        try {
+            new SimpleDateFormat("yyyy-MM-dd").parse(date);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
