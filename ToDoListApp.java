@@ -1,8 +1,11 @@
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
-public class ToDoListApp extends JFrame {
+public class ToDoListAppGUI extends JFrame {
     private TaskManager manager;
     private DefaultListModel<String> listModel;
     private JList<String> taskDisplay;
@@ -23,7 +26,7 @@ public class ToDoListApp extends JFrame {
         JButton addButton = new JButton("Add Task");
 
         inputPanel.add(new JLabel("Task Name:"));
-        inputPanel.add(new JLabel("Due Date:"));
+        inputPanel.add(new JLabel("Due Date (YYYY-MM-DD):"));
         inputPanel.add(new JLabel("Priority:"));
         inputPanel.add(new JLabel(""));
         inputPanel.add(nameField);
@@ -64,9 +67,15 @@ public class ToDoListApp extends JFrame {
                     throw new IllegalArgumentException("Please fill out all fields.");
                 }
 
+                // ✅ Validate due date format (YYYY-MM-DD)
+                if (!isValidDate(due)) {
+                    throw new IllegalArgumentException("Invalid due date format. Use YYYY-MM-DD (e.g., 2025-10-06).");
+                }
+
+                // ✅ Validate priority text
                 if (!priority.equalsIgnoreCase("High") &&
-                        !priority.equalsIgnoreCase("Medium") &&
-                        !priority.equalsIgnoreCase("Low")) {
+                    !priority.equalsIgnoreCase("Medium") &&
+                    !priority.equalsIgnoreCase("Low")) {
                     throw new IllegalArgumentException("Priority must be High, Medium, or Low.");
                 }
 
@@ -77,7 +86,7 @@ public class ToDoListApp extends JFrame {
             } catch (IllegalArgumentException ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "An unexpected error occurred: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Unexpected error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -106,14 +115,13 @@ public class ToDoListApp extends JFrame {
                 String newName = JOptionPane.showInputDialog("Enter new task name:");
                 if (newName == null || newName.trim().isEmpty()) throw new IllegalArgumentException("Task name cannot be empty.");
 
-                String newDueDate = JOptionPane.showInputDialog("Enter new due date:");
+                String newDueDate = JOptionPane.showInputDialog("Enter new due date (YYYY-MM-DD):");
                 if (newDueDate == null || newDueDate.trim().isEmpty()) throw new IllegalArgumentException("Due date cannot be empty.");
+                if (!isValidDate(newDueDate)) throw new IllegalArgumentException("Invalid due date format. Use YYYY-MM-DD.");
 
                 String newPriority = JOptionPane.showInputDialog("Enter new priority (High/Medium/Low):");
                 if (newPriority == null || newPriority.trim().isEmpty()) throw new IllegalArgumentException("Priority cannot be empty.");
-                if (!newPriority.equalsIgnoreCase("High") &&
-                        !newPriority.equalsIgnoreCase("Medium") &&
-                        !newPriority.equalsIgnoreCase("Low")) {
+                if (!newPriority.equalsIgnoreCase("High") && !newPriority.equalsIgnoreCase("Medium") && !newPriority.equalsIgnoreCase("Low")) {
                     throw new IllegalArgumentException("Priority must be High, Medium, or Low.");
                 }
 
@@ -147,6 +155,16 @@ public class ToDoListApp extends JFrame {
                 JOptionPane.showMessageDialog(this, "Error during search: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
+    }
+
+    // ✅ Helper Method for Date Validation
+    private boolean isValidDate(String date) {
+        try {
+            LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            return true;
+        } catch (DateTimeParseException e) {
+            return false;
+        }
     }
 
     private void refreshList(List<Task> tasks) {
