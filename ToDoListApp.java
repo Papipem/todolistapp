@@ -18,16 +18,29 @@ public class ToDoListApp {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
 
-        // top panel
+        // 🎨 COLORS
+        Color bgColor = new Color(245, 247, 250);
+        Color buttonColor = new Color(52, 152, 219);
+        Color buttonText = Color.WHITE;
+        Color listBg = Color.WHITE;
+        Color listText = Color.DARK_GRAY;
+
+        frame.getContentPane().setBackground(bgColor);
+
+        // 🔹 TOP PANEL (no blue background)
         JPanel topPanel = new JPanel(new GridLayout(2, 4, 5, 5));
+        topPanel.setBackground(bgColor);
+
         nameField = new JTextField();
         dueField = new JTextField();
         priorityField = new JTextField();
         JButton addButton = new JButton("Add Task");
 
-        topPanel.add(new JLabel("Task Name:"));
-        topPanel.add(new JLabel("Due Date (YYYY-MM-DD):"));
-        topPanel.add(new JLabel("Priority:"));
+        styleButton(addButton, buttonColor, buttonText);
+
+        topPanel.add(createStyledLabel("Task Name:", Color.BLACK));
+        topPanel.add(createStyledLabel("Due Date (YYYY-MM-DD):", Color.BLACK));
+        topPanel.add(createStyledLabel("Priority:", Color.BLACK));
         topPanel.add(new JLabel(""));
         topPanel.add(nameField);
         topPanel.add(dueField);
@@ -35,31 +48,46 @@ public class ToDoListApp {
         topPanel.add(addButton);
         frame.add(topPanel, BorderLayout.NORTH);
 
-        // search bar
+        // 🔹 SEARCH PANEL
         JPanel searchPanel = new JPanel(new BorderLayout());
+        searchPanel.setBackground(bgColor);
         searchField = new JTextField();
         JButton searchButton = new JButton("Search");
         JButton undoButton = new JButton("Undo");
         JButton dequeueButton = new JButton("Dequeue Completed");
         JButton peekButton = new JButton("Peek Last Action");
-
-        // 🔹 New button for viewing completed tasks
         JButton viewCompletedButton = new JButton("View Completed");
 
+        styleButton(searchButton, buttonColor, buttonText);
+        styleButton(undoButton, buttonColor, buttonText);
+        styleButton(dequeueButton, buttonColor, buttonText);
+        styleButton(peekButton, buttonColor, buttonText);
+        styleButton(viewCompletedButton, buttonColor, buttonText);
+
         JPanel searchButtons = new JPanel();
+        searchButtons.setBackground(bgColor);
         searchButtons.add(searchButton);
         searchButtons.add(undoButton);
         searchButtons.add(peekButton);
         searchButtons.add(dequeueButton);
-        searchButtons.add(viewCompletedButton); // 🔹 added here
+        searchButtons.add(viewCompletedButton);
 
         searchPanel.add(searchField, BorderLayout.CENTER);
         searchPanel.add(searchButtons, BorderLayout.EAST);
         frame.add(searchPanel, BorderLayout.SOUTH);
 
-        frame.add(new JScrollPane(taskList), BorderLayout.CENTER);
+        // 🔹 TASK LIST DESIGN
+        taskList.setBackground(listBg);
+        taskList.setForeground(listText);
+        taskList.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        taskList.setSelectionBackground(new Color(100, 149, 237));
+        taskList.setSelectionForeground(Color.WHITE);
 
-        // context menu
+        JScrollPane scrollPane = new JScrollPane(taskList);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        frame.add(scrollPane, BorderLayout.CENTER);
+
+        // 🔹 CONTEXT MENU
         JPopupMenu menu = new JPopupMenu();
         JMenuItem editItem = new JMenuItem("Edit Task");
         JMenuItem deleteItem = new JMenuItem("Delete Task");
@@ -69,30 +97,53 @@ public class ToDoListApp {
         menu.add(completeItem);
         taskList.setComponentPopupMenu(menu);
 
-        // add
+        // 🎯 LOGIC (same)
+// add
         addButton.addActionListener(e -> {
             String name = nameField.getText().trim();
             String due = dueField.getText().trim();
             String priority = priorityField.getText().trim();
 
+            // Empty fields check
             if (name.isEmpty() || due.isEmpty() || priority.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "All fields required!");
-                return;
-            }
-            if (!taskManager.isValidDate(due)) {
-                JOptionPane.showMessageDialog(frame, "Invalid date format! Use YYYY-MM-DD.");
+                JOptionPane.showMessageDialog(frame, "All fields are required!", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            Task t = new Task(name, due, priority);
+            // Date validation
+            if (!taskManager.isValidDate(due)) {
+                JOptionPane.showMessageDialog(frame, "Invalid date format! Use YYYY-MM-DD.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // ✅ Priority validation (this is the fix)
+            if (!priority.equalsIgnoreCase("High") &&
+                    !priority.equalsIgnoreCase("Medium") &&
+                    !priority.equalsIgnoreCase("Low")) {
+                JOptionPane.showMessageDialog(frame,
+                        "Priority must be one of the following: High, Medium, or Low.",
+                        "Invalid Priority",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+// Format the priority properly (capitalize first letter)
+            String formattedPriority = priority.substring(0, 1).toUpperCase() + priority.substring(1).toLowerCase();
+
+// Create the task using the formatted priority
+            Task t = new Task(name, due, formattedPriority);
             taskManager.addTask(t); // push
             listModel.addElement(t);
+
+
+            // Clear input fields
             nameField.setText("");
             dueField.setText("");
             priorityField.setText("");
         });
 
-        // edit
+
+
         editItem.addActionListener(e -> {
             Task selected = taskList.getSelectedValue();
             if (selected == null) {
@@ -109,54 +160,49 @@ public class ToDoListApp {
                 return;
             }
 
-            Task newTask = new Task(newName, newDue, newPriority);
-            taskManager.editTask(selected, newTask); // push edited
+            String formattedPriority = newPriority.substring(0, 1).toUpperCase() + newPriority.substring(1).toLowerCase();
+            Task newTask = new Task(newName, newDue, formattedPriority);
+            taskManager.editTask(selected, newTask);
             listModel.setElementAt(newTask, taskList.getSelectedIndex());
         });
 
-        // delete
         deleteItem.addActionListener(e -> {
             Task selected = taskList.getSelectedValue();
             if (selected == null) return;
-            taskManager.deleteTask(selected); // push deleted
+            taskManager.deleteTask(selected);
             listModel.removeElement(selected);
         });
 
-        // complete
         completeItem.addActionListener(e -> {
             Task selected = taskList.getSelectedValue();
             if (selected == null) return;
-            taskManager.completeTask(selected); // enqueue
+            taskManager.completeTask(selected);
             listModel.removeElement(selected);
             JOptionPane.showMessageDialog(frame, "Task completed (enqueued).");
         });
 
-        // undo
         undoButton.addActionListener(e -> {
-            taskManager.undoLastAction(); // pop
+            taskManager.undoLastAction();
             listModel.clear();
             for (Task t : taskManager.getTasks()) listModel.addElement(t);
         });
 
-        // peek
         peekButton.addActionListener(e -> {
-            Task top = taskManager.peekLastAction(); // peek
+            Task top = taskManager.peekLastAction();
             if (top != null)
                 JOptionPane.showMessageDialog(frame, "Top of Stack (Last Action): " + top);
             else
                 JOptionPane.showMessageDialog(frame, "Stack is empty.");
         });
 
-        // dequeue completed
         dequeueButton.addActionListener(e -> {
-            Task t = taskManager.dequeueCompleted(); // dequeue
+            Task t = taskManager.dequeueCompleted();
             if (t == null)
                 JOptionPane.showMessageDialog(frame, "No completed tasks to dequeue.");
             else
                 JOptionPane.showMessageDialog(frame, "Removed oldest completed: " + t);
         });
 
-        // 🔹 view completed
         viewCompletedButton.addActionListener(e -> {
             java.util.Queue<Task> completed = taskManager.getCompletedQueue();
             if (completed.isEmpty()) {
@@ -170,7 +216,6 @@ public class ToDoListApp {
             }
         });
 
-        // search
         searchButton.addActionListener(e -> {
             String keyword = searchField.getText().trim();
             if (keyword.isEmpty()) return;
@@ -182,6 +227,24 @@ public class ToDoListApp {
         });
 
         frame.setVisible(true);
+    }
+
+    // 🔹 Helper method for label styling
+    private JLabel createStyledLabel(String text, Color color) {
+        JLabel label = new JLabel(text);
+        label.setForeground(color);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        return label;
+    }
+
+    // 🔹 Helper method for button styling
+    private void styleButton(JButton button, Color bg, Color fg) {
+        button.setBackground(bg);
+        button.setForeground(fg);
+        button.setFocusPainted(false);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        button.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
 
     public static void main(String[] args) {
