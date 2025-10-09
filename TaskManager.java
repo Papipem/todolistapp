@@ -1,10 +1,13 @@
 import java.util.*;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 public class TaskManager {
-    private Stack<Task> actionStack;       // for push, pop, peek
-    private Queue<Task> completedQueue;    // for enqueue, dequeue
-    private List<Task> tasks;              // main list of tasks
+    private Stack<Task> actionStack = new Stack<>();
+    private Queue<Task> completedQueue = new LinkedList<>();
+    private List<Task> tasks = new ArrayList<>();
+
 
     public TaskManager() {
         actionStack = new Stack<>();
@@ -80,12 +83,14 @@ public class TaskManager {
         return completedQueue;
     }
 
-    // ---- Date validation ----
-    public boolean isValidDate(String date) {
+    public boolean isValidDate(String dateStr) {
         try {
-            new SimpleDateFormat("yyyy-MM-dd").parse(date);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            LocalDate date = LocalDate.parse(dateStr, formatter);
+
+            // ✅ Allow all valid dates (no restriction on past dates)
             return true;
-        } catch (Exception e) {
+        } catch (DateTimeParseException e) {
             return false;
         }
     }
