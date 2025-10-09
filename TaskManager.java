@@ -8,7 +8,6 @@ public class TaskManager {
     private Queue<Task> completedQueue = new LinkedList<>();
     private List<Task> tasks = new ArrayList<>();
 
-
     public TaskManager() {
         actionStack = new Stack<>();
         completedQueue = new LinkedList<>();
@@ -83,12 +82,11 @@ public class TaskManager {
         return completedQueue;
     }
 
+    // ---- Date validation ----
     public boolean isValidDate(String dateStr) {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            LocalDate date = LocalDate.parse(dateStr, formatter);
-
-            // ✅ Allow all valid dates (no restriction on past dates)
+            LocalDate.parse(dateStr, formatter);
             return true;
         } catch (DateTimeParseException e) {
             return false;
