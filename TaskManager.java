@@ -64,13 +64,16 @@ public class TaskManager {
 
     // ---- Search by keyword ----
     public Task searchTask(String keyword) {
+        keyword = keyword.trim().toLowerCase();
         for (Task t : tasks) {
-            if (t.getName().equalsIgnoreCase(keyword) ||
-                    t.getDueDate().equalsIgnoreCase(keyword))
+            if ((t.getName() != null && t.getName().toLowerCase().contains(keyword)) ||
+                    (t.getDueDate() != null && t.getDueDate().toLowerCase().contains(keyword))) {
                 return t;
+            }
         }
         return null;
     }
+
 
     // ---- Get all tasks ----
     public List<Task> getTasks() {
